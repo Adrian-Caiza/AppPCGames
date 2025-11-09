@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { User } from '../../domain/entities/User';
 import { injector } from '../../core/injector/Injector';
+import { db } from "../../../FirebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 /**
  * Hook central de autenticación (Auth View Model).
@@ -40,28 +42,36 @@ export function useAuthViewModel() {
             const newUser = await injector.signInUserUseCase.execute(email, password);
             // El estado 'user' se actualizará automáticamente por el 'onAuthStateChanged'
             // setUser(newUser); // Esto es redundante, pero posible si no se usa onAuthStateChanged
-            return newUser; 
+            return newUser;
         } catch (err: any) {
-            const message = err.message.includes('auth/wrong-password') 
+            const message = err.message.includes('auth/wrong-password')
                 ? 'Credenciales incorrectas.'
-                : err.message.includes('auth/user-not-found') 
-                ? 'Usuario no encontrado.'
-                : 'Fallo al iniciar sesión.';
+                : err.message.includes('auth/user-not-found')
+                    ? 'Usuario no encontrado.'
+                    : 'Fallo al iniciar sesión.';
             setError(message);
         } finally {
             setIsOperationLoading(false);
         }
     };
-    
+
     const register = async (email: string, password: string) => {
         setIsOperationLoading(true);
         setError(null);
         try {
             // El Caso de Uso de Registro también necesita ser implementado en el Dominio/Injector
             const newUser = await injector.registerUserUseCase.execute(email, password);
+            
+            if (newUser) {
+                await setDoc(doc(db, "users", newUser.uid), {
+                    email: newUser.email,
+                    displayName: newUser.displayName || "",
+                    createdAt: new Date(),
+                });
+            }
             return newUser;
         } catch (err: any) {
-            const message = err.message.includes('auth/email-already-in-use') 
+            const message = err.message.includes('auth/email-already-in-use')
                 ? 'El correo ya está en uso.'
                 : 'Fallo al registrar el usuario.';
             setError(message);

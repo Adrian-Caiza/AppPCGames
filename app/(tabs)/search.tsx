@@ -1,8 +1,9 @@
 // app/(tabs)/search.tsx
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet, SafeAreaView, Image, TouchableOpacity, Button, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet,Image, TouchableOpacity, Button, Alert } from 'react-native';
 import { Deal } from '../../src/domain/entities/Deal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { injector } from '../../src/core/injector/Injector';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';

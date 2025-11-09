@@ -10,11 +10,10 @@ export class RegisterUser {
         this.repository = repository;
     }
 
-    execute(email: string, password: string): Promise<User> {
-        
+    async execute(email: string, password: string): Promise<User> {
         if (!email || !password) {
             throw new Error("El correo y la contraseña son requeridos.");
         }
-        return this.repository.signIn(email, password);
+        return this.repository.register(email, password);
     }
 }

@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet, ScrollView } from 'react-native';
-import { useAuthViewModel } from '../../src/presentation/hooks/useAuthViewModel';
+import { useAuthViewModel } from '../src/presentation/hooks/useAuthViewModel';
 import { Link, router } from 'expo-router';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function RegisterScreen() {
     // 1. Obtener la lógica de autenticación del ViewModel
@@ -12,6 +14,7 @@ export default function RegisterScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [registered, setRegistered] = useState(false);
 
     const handleRegister = async () => {
         // Validación de campos vacíos
@@ -38,6 +41,7 @@ export default function RegisterScreen() {
             await register(email, password);
             // Si el registro es exitoso, Firebase inicia sesión automáticamente.
             // La navegación se manejará a través del _layout.tsx.
+            setRegistered(true);
             Alert.alert('¡Registro Exitoso!', 'Tu cuenta ha sido creada. Serás redirigido.');
             // Opcional: Redirigir manualmente si es necesario (ej: router.replace('/'));
         } catch (e: any) {
@@ -47,12 +51,22 @@ export default function RegisterScreen() {
         }
     };
     
+    useEffect(() => {
+        if (registered && user) {
+            // Esperar un pequeño tiempo antes de redirigir (opcional)
+            const timer = setTimeout(() => {
+                router.replace('/(tabs)/deals');
+            }, 500);
+
+            return () => clearTimeout(timer);
+        }
+    }, [registered, user]);
     // Si el usuario ya está autenticado, redirigimos inmediatamente (redundante si lo maneja _layout)
-    if (user && !isOperationLoading) {
-        // Redirigimos a la pantalla principal de ofertas
-        router.replace('/deals');
-        return null;
-    }
+    useEffect(() => {
+        if (user && !isOperationLoading) {
+            router.replace('/(tabs)/deals');
+        }
+    }, [user, isOperationLoading]);
 
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet } from 'react-native';
-import { useAuthViewModel } from '../../src/presentation/hooks/useAuthViewModel';
+import { useAuthViewModel } from '../src/presentation/hooks/useAuthViewModel';
 import { Link, router } from 'expo-router'; // Importar 'router' para navegación
 
 export default function LoginScreen() {

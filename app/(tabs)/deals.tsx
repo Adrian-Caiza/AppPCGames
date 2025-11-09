@@ -1,8 +1,9 @@
 // app/(tabs)/deals.tsx
 
 import React from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, Button, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, Button, Image, TouchableOpacity } from 'react-native';
 import { useDealsViewModel } from '../../src/presentation/hooks/useDealsViewModel';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthViewModel } from '../../src/presentation/hooks/useAuthViewModel'; // Para el botón de cerrar sesión
 import { Deal } from '../../src/domain/entities/Deal';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Usamos íconos para mejor UI
