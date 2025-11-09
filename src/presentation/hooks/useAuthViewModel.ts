@@ -5,6 +5,7 @@ import { User } from '../../domain/entities/User';
 import { injector } from '../../core/injector/Injector';
 import { db } from "../../../FirebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
+import { router } from "expo-router";
 
 /**
  * Hook central de autenticación (Auth View Model).
@@ -55,7 +56,7 @@ export function useAuthViewModel() {
         }
     };
 
-    const register = async (email: string, password: string) => {
+    const register = async (email: string, password: string, name?: string) => {
         setIsOperationLoading(true);
         setError(null);
         try {
@@ -63,9 +64,10 @@ export function useAuthViewModel() {
             const newUser = await injector.registerUserUseCase.execute(email, password);
             
             if (newUser) {
+                
                 await setDoc(doc(db, "users", newUser.uid), {
                     email: newUser.email,
-                    displayName: newUser.displayName || "",
+                    displayName: name || "",
                     createdAt: new Date(),
                 });
             }
@@ -81,14 +83,14 @@ export function useAuthViewModel() {
     };
 
     const signOut = async () => {
-        setError(null);
-        try {
-            await injector.authRepository.signOut();
-            // setUser(null); // 'onAuthStateChanged' se encarga de esto
-        } catch (err: any) {
-            setError('Fallo al cerrar sesión.');
-        }
-    };
+    setError(null);
+    try {
+        await injector.authRepository.signOut();
+        router.replace("/login"); // Redirige inmediatamente al login
+    } catch (err: any) {
+        setError('Fallo al cerrar sesión.');
+    }
+};
 
     return {
         user,

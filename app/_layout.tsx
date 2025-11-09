@@ -27,6 +27,10 @@ export default function RootLayout() {
         );
     }
 
+    if (!user) {
+        return <Redirect href="/login" />; // ✅ Redirige al login
+    }
+
     // Si hay usuario, mostramos las tabs (app principal) y evitamos que el usuario vuelva a login/register.
     return (
         <Stack>

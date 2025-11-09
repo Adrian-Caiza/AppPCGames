@@ -57,7 +57,7 @@ export default function LoginScreen() {
             {isOperationLoading ? (
                 <ActivityIndicator size="large" color="#007AFF" />
             ) : (
-                <Button title="Entrar" onPress={handleLogin} disabled={!email || !password} />
+                <Button title="Entrar" onPress={handleLogin}  />
             )}
             
             <Link href="/register" style={styles.link}>

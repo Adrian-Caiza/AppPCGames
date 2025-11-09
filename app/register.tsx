@@ -5,12 +5,13 @@ import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet, Sc
 import { useAuthViewModel } from '../src/presentation/hooks/useAuthViewModel';
 import { Link, router } from 'expo-router';
 import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+
 
 export default function RegisterScreen() {
     // 1. Obtener la lógica de autenticación del ViewModel
     const { register, isOperationLoading, error, setError, user } = useAuthViewModel();
     
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,7 +19,7 @@ export default function RegisterScreen() {
 
     const handleRegister = async () => {
         // Validación de campos vacíos
-        if (!email || !password || !confirmPassword) {
+        if (!name || !email || !password || !confirmPassword) {
             Alert.alert('Error', 'Por favor, rellena todos los campos.');
             return;
         }
@@ -72,6 +73,15 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.container}>
                 <Text style={styles.title}>Crear Nueva Cuenta</Text>
+
+                {/* 🧩 Campo Nombre */}
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nombre Completo"
+                    value={name}
+                    onChangeText={setName}
+                    editable={!isOperationLoading}
+                />
                 
                 <TextInput
                     style={styles.input}
@@ -108,8 +118,7 @@ export default function RegisterScreen() {
                 ) : (
                     <Button 
                         title="Registrarse" 
-                        onPress={handleRegister} 
-                        disabled={!email || !password || !confirmPassword} 
+                        onPress={handleRegister}  
                         color="#4CAF50"
                     />
                 )}
