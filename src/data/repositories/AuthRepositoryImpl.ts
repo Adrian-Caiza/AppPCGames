@@ -21,7 +21,7 @@ export class AuthRepositoryImpl implements IAuthRepository {
             // Mapeamos el objeto Firebase User a nuestra Entidad User de Dominio
             return firebaseUserToEntity(credential.user);
         } catch (error: any) {
-            // Manejo de errores específicos de Firebase (ej. 'auth/wrong-password')
+            // Manejo de errores específicos de Firebase 
             console.error("Error al iniciar sesión:", error.code, error.message);
             // Relanzamos el error para que la capa de Presentación lo maneje
             throw new Error(`Fallo en el inicio de sesión: ${error.message}`);

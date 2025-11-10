@@ -1,7 +1,7 @@
 // app/(tabs)/search.tsx
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Button, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, ActivityIndicator, StyleSheet, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { Deal } from '../../src/domain/entities/Deal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { injector } from '../../src/core/injector/Injector';
@@ -10,8 +10,19 @@ import * as Linking from 'expo-linking';
 import { useStoresViewModel } from '../../src/presentation/hooks/useStoresViewModel';
 import { useDealsViewModel } from '../../src/presentation/hooks/useDealsViewModel';
 
+// Paleta de colores
+const colors = {
+    background: '#1F2937', // Azul oscuro/gris
+    cardBackground: '#374151', // Gris para el fondo del input
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    placeholder: '#6B7280',
+    primary: '#50E3C2', // Verde menta
+    salePriceGreen: '#4CAF50', // Verde de precio
+    error: '#EF4444',
+};
+
 // --- COMPONENTE INDIVIDUAL DE RESULTADO DE BÚSQUEDA ---
-// (Este componente no cambia)
 interface SearchDealItemProps {
     deal: Deal;
     getStoreIcon: (id: string) => string | undefined;
@@ -37,13 +48,14 @@ const SearchDealItem: React.FC<SearchDealItemProps> = ({ deal, getStoreIcon, get
                 </Text>
                 <Text style={styles.cheapestPrice}>
                     Precio Más Barato: 
-                    <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}> ${deal.salePrice.toFixed(2)}</Text>
+                    <Text style={styles.salePriceHighlight}> ${deal.salePrice.toFixed(2)}</Text>
                 </Text>
                 <Text style={styles.storeText}>
                     Visto en: {storeName} 
                 </Text>
             </View>
-            <MaterialCommunityIcons name="magnify" size={24} color="#1565C0" style={styles.linkIcon} />
+            {/* Icono actualizado para consistencia */}
+            <MaterialCommunityIcons name="chevron-right" size={24} color={colors.primary} style={styles.linkIcon} />
         </TouchableOpacity>
     );
 };
@@ -55,28 +67,24 @@ export default function SearchScreen() {
     const [results, setResults] = useState<Deal[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
-    
-    // 1. AÑADIMOS EL NUEVO ESTADO
-    const [apiSearchPerformed, setApiSearchPerformed] = useState(false); // <- NUEVA LÍNEA
 
     // Cargamos los datos de las tiendas
     const { getStoreName, getStoreIcon, isLoading: isStoresLoading } = useStoresViewModel();
-    // Cargamos las ofertas iniciales
+    // Cargamos las ofertas iniciales (para cuando la barra esté vacía)
     const { deals: initialDeals, isLoading: isDealsLoading, error: dealsError, reloadDeals } = useDealsViewModel();
 
-    // Efecto para actualizar los resultados cuando las ofertas iniciales se cargan
+    // 1. Cargamos las ofertas iniciales en los resultados
     useEffect(() => {
-        if (initialDeals.length > 0 && searchTerm.length === 0) {
+        if (initialDeals.length > 0) {
             setResults(initialDeals);
         }
     }, [initialDeals]);
-    
-    // 2. ACTUALIZAMOS handleSearch (botón)
-    const handleSearch = useCallback(async (query: string) => {
+
+    // 2. CREAMOS UNA FUNCIÓN REUTILIZABLE PARA LA BÚSQUEDA EN API
+    const runSearch = useCallback(async (query: string) => {
         if (!query || query.length < 3) {
-            setSearchError('Introduce al menos 3 caracteres para buscar.');
-            setResults(initialDeals); // Volver a ofertas iniciales
-            setApiSearchPerformed(false); // <- NUEVA LÍNEA
+            setResults(initialDeals); // Volver a ofertas iniciales si la búsqueda es corta
+            setSearchError(null);
             return;
         }
 
@@ -86,33 +94,42 @@ export default function SearchScreen() {
         try {
             const searchResults = await injector.searchGameOffersUseCase.execute(query);
             setResults(searchResults);
-            setApiSearchPerformed(true); // <- NUEVA LÍNEA (Marcamos que la API buscó)
         } catch (err: any) {
             console.error("Search failed:", err);
             setSearchError('Fallo en la búsqueda. Inténtalo más tarde.');
-            setApiSearchPerformed(false); // <- NUEVA LÍNEA
         } finally {
             setIsLoading(false);
         }
-    }, [initialDeals]);
+    }, [initialDeals]); // Depende de 'initialDeals' para poder resetear la lista
 
-    // 3. ACTUALIZAMOS handleTextChange (filtro rápido)
+    // 3. AÑADIMOS EL "DEBOUNCER" 
+    useEffect(() => {
+        if (searchTerm.length === 0) {
+            setResults(initialDeals);
+            setSearchError(null);
+            return; 
+        }
+        if (searchTerm.length < 3) {
+            setSearchError(null);
+            return; 
+        }
+        const handler = setTimeout(() => {
+            runSearch(searchTerm); // Llama a la API
+        }, 500); 
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm, runSearch, initialDeals]); 
+
+    // 4. SIMPLIFICAMOS EL MANEJADOR DEL TEXTO
     const handleTextChange = (text: string) => {
         setSearchTerm(text);
-        setApiSearchPerformed(false); // <- NUEVA LÍNEA (Resetea el flag)
-        setSearchError(null); // Limpiamos errores
+    };
 
-        if (text.length === 0) {
-            setResults(initialDeals); // Si borra todo, muestra ofertas iniciales
-        } else if (text.length > 2) {
-            const filteredDeals = initialDeals.filter(deal =>
-                deal.title.toLowerCase().includes(text.toLowerCase())
-            );
-            setResults(filteredDeals);
-        } else {
-             // Si tiene 1 o 2 letras, no filtramos nada, solo mostramos las iniciales
-            setResults(initialDeals); // <- NUEVO BLOQUE ELSE
-        }
+    // 5. SIMPLIFICAMOS EL MANEJADOR DEL BOTÓN "BUSCAR"
+    const handleSearchButton = () => {
+        runSearch(searchTerm); // Ejecuta la búsqueda inmediatamente
     };
 
     // Renderizado de la lista
@@ -124,38 +141,53 @@ export default function SearchScreen() {
         />
     );
     
-    // (isLoading || isDealsLoading)
     const isTotalLoading = isLoading || isStoresLoading || (isDealsLoading && results.length === 0);
+    const isButtonDisabled = isTotalLoading || searchTerm.length < 3;
 
     return (
         <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="light-content" />
             <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar juego por título..."
-                    value={searchTerm}
-                    onChangeText={handleTextChange}
-                    onSubmitEditing={() => handleSearch(searchTerm)}
-                    returnKeyType="search"
-                />
-                <Button 
-                    title="Buscar" 
-                    onPress={() => handleSearch(searchTerm)}
-                    disabled={isTotalLoading || searchTerm.length < 3}
-                />
+                
+                {/* Input de búsqueda estilizado */}
+                <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="magnify" size={20} color={colors.placeholder} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Buscar juego por título..."
+                        placeholderTextColor={colors.placeholder}
+                        value={searchTerm}
+                        onChangeText={handleTextChange} 
+                        onSubmitEditing={handleSearchButton} 
+                        returnKeyType="search"
+                        autoCapitalize="none"
+                    />
+                </View>
+
+                {/* Botón de búsqueda estilizado */}
+                <TouchableOpacity 
+                    style={[styles.searchButton, isButtonDisabled && styles.disabledButton]}
+                    onPress={handleSearchButton} 
+                    disabled={isButtonDisabled}
+                >
+                    <Text style={styles.searchButtonText}>Buscar</Text>
+                </TouchableOpacity>
             </View>
 
             {isTotalLoading && (
                 <View style={styles.center}>
-                    <ActivityIndicator size="large" color="#1565C0" />
-                    <Text style={{ marginTop: 10 }}>Cargando datos...</Text>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.loadingText}>Cargando datos...</Text>
                 </View>
             )}
 
             {!isTotalLoading && (dealsError || searchError) && (
                 <View style={styles.center}>
+                    <MaterialCommunityIcons name="alert-circle-outline" size={60} color={colors.error} />
                     <Text style={styles.errorText}>{dealsError || searchError}</Text>
-                    <Button title="Reintentar" onPress={reloadDeals} />
+                    <TouchableOpacity style={styles.retryButton} onPress={reloadDeals}>
+                        <Text style={styles.retryButtonText}>Reintentar</Text>
+                    </TouchableOpacity>
                 </View>
             )}
 
@@ -165,16 +197,15 @@ export default function SearchScreen() {
                     keyExtractor={(item) => item.dealID}
                     renderItem={renderItem}
                     contentContainerStyle={styles.listContent}
+                    keyboardShouldPersistTaps="handled" // Para que se pueda presionar un item sin que se cierre el teclado
                     
-                    // 4. ACTUALIZAMOS ListEmptyComponent
                     ListEmptyComponent={
                         <View style={styles.center}>
-                            {apiSearchPerformed ? (
-                                // Si la API buscó y no encontró nada:
-                                <Text>No se encontraron resultados para "{searchTerm}".</Text>
+                            <MaterialCommunityIcons name="gamepad-variant-outline" size={50} color={colors.textSecondary} />
+                            {searchTerm.length < 3 ? (
+                                <Text style={styles.emptyText}>Escribe al menos 3 letras para buscar.</Text>
                             ) : (
-                                // Si el filtro local no encontró nada:
-                                <Text>No hay coincidencias locales. Presiona 'Buscar'.</Text>
+                                <Text style={styles.emptyText}>No se encontraron resultados para "{searchTerm}".</Text>
                             )}
                         </View>
                     }
@@ -188,7 +219,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     center: {
         flex: 1,
@@ -197,47 +228,95 @@ const styles = StyleSheet.create({
         padding: 20,
         textAlign: 'center',
     },
+    loadingText: {
+        color: colors.textSecondary,
+        marginTop: 10,
+        fontSize: 16,
+    },
+    errorText: {
+        color: colors.error,
+        marginTop: 20,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    retryButton: {
+        backgroundColor: colors.primary,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+    },
+    retryButtonText: {
+        color: colors.background,
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    emptyText: {
+        color: colors.textSecondary,
+        fontSize: 16,
+        marginTop: 10,
+        textAlign: 'center',
+    },
     searchContainer: {
         flexDirection: 'row',
         padding: 15,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        backgroundColor: colors.cardBackground, // Fondo del contenedor de búsqueda
+    },
+    inputContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.background, // Fondo del input
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        marginRight: 10,
+        height: 45,
+    },
+    inputIcon: {
+        marginRight: 10,
     },
     searchInput: {
         flex: 1,
-        height: 40,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        marginRight: 10,
+        height: 45,
+        color: colors.text,
+        fontSize: 16,
+    },
+    searchButton: {
+        backgroundColor: colors.primary,
+        borderRadius: 12,
+        justifyContent: 'center',
+        paddingHorizontal: 15,
+        height: 45,
+    },
+    disabledButton: {
+        opacity: 0.5,
+    },
+    searchButtonText: {
+        color: colors.background,
+        fontWeight: 'bold',
+        fontSize: 14,
     },
     listContent: {
-        paddingVertical: 10,
-        paddingHorizontal: 5,
-        // Para que el "ListEmptyComponent" no ocupe toda la pantalla
+        paddingTop: 10,
+        paddingBottom: 20,
         flexGrow: 1, 
     },
     dealCard: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 8,
+        backgroundColor: colors.cardBackground,
+        borderRadius: 12,
         marginVertical: 7,
-        marginHorizontal: 10,
-        padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
+        marginHorizontal: 15,
+        padding: 12,
         alignItems: 'center',
     },
     thumbImage: {
         width: 100,
         height: 60,
-        borderRadius: 4,
-        marginRight: 10,
+        borderRadius: 8,
+        marginRight: 12,
+        backgroundColor: '#555', // Placeholder
     },
     infoContainer: {
         flex: 1,
@@ -246,25 +325,24 @@ const styles = StyleSheet.create({
     dealTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: colors.text,
         marginBottom: 5,
     },
     cheapestPrice: {
         fontSize: 14,
-        color: '#555',
+        color: colors.textSecondary,
         marginTop: 5,
+    },
+    salePriceHighlight: {
+        fontWeight: 'bold',
+        color: colors.salePriceGreen,
     },
     storeText: {
         fontSize: 12,
-        color: '#888',
+        color: colors.textSecondary,
         marginTop: 3,
     },
     linkIcon: {
         marginLeft: 10,
     },
-    errorText: {
-        color: '#D32F2F',
-        marginTop: 20,
-        textAlign: 'center',
-    }
 });

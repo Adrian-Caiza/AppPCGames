@@ -4,10 +4,10 @@ import { IGameRepository } from '../../domain/repositories/IGameRepository';
 import { Deal } from '../../domain/entities/Deal';
 import { CheapSharkApiDataSource } from '../datasources/CheapSharkApiDataSource';
 import { dealDtoToEntity } from '../mappers/dealMapper';
-import { Store } from '../../domain/entities/Store'; // Necesitas esta entidad
-import { Game } from '../../domain/entities/Game'; // Necesitas esta entidad
-import { storeDtoToEntity } from '../mappers/StoreMapper'; // Nuevo Mapper
-import { gameSearchDtoToDealEntity } from '../mappers/GameSearchMapper'; // Nuevo Mapper
+import { Store } from '../../domain/entities/Store'; 
+import { Game } from '../../domain/entities/Game'; 
+import { storeDtoToEntity } from '../mappers/StoreMapper'; 
+import { gameSearchDtoToDealEntity } from '../mappers/GameSearchMapper'; 
 
 
 /**
@@ -40,8 +40,7 @@ export class GameRepositoryImpl implements IGameRepository {
             return deals;
 
         } catch (error) {
-            // Se puede agregar lógica de manejo de errores específica,
-            // como logging o reconexión. Por ahora, relanzamos el error.
+            
             console.error("Error en GameRepositoryImpl.getLatestDeals:", error);
             throw error; 
         }
@@ -86,5 +85,5 @@ export class GameRepositoryImpl implements IGameRepository {
         }
     }
 
-    // Pendiente: Definir Entidades Game y Store
+    
 }

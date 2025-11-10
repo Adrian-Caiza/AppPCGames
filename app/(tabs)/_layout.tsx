@@ -1,17 +1,17 @@
-// app/(tabs)/_layout.tsx
+
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
     return (
-        // 2. Cambiamos Tabs para que envuelva las pantallas
+
         <Tabs screenOptions={{ 
             headerShown: false,
-            tabBarActiveTintColor: '#000000ff', // (Opcional) Color cuando está activo
+            tabBarActiveTintColor: '#000000ff', 
         }}>
             
-            {/* 3. Definimos la pestaña 'deals' */}
+            {/* Definimos la pestaña 'deals' */}
             <Tabs.Screen 
                 name="deals" // Nombre del archivo (deals.tsx)
                 options={{

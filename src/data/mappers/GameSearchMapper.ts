@@ -20,7 +20,7 @@ export function gameSearchDtoToDealEntity(dto: GameSearchDto): Deal {
         normalPrice: 0, // No disponible en este endpoint, usamos 0.
         savings: 0,     // No disponible en este endpoint, usamos 0.
         storeID: '0',   // No disponible en este endpoint, usamos '0' o null.
-        // Creamos un enlace genérico de búsqueda o dejamos que la lógica posterior lo genere.
+        // Creamos un enlace genérico de búsqueda 
         link: `${CHEAPSHARK_REDIRECT_URL}?dlid=${dto.gameID}`, 
         thumb: dto.thumb,
         dealID: `SEARCH-${dto.gameID}`

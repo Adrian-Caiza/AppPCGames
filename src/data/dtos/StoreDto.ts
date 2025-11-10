@@ -6,10 +6,10 @@
 export interface StoreDto {
     storeID: string;
     storeName: string;
-    isActive: number; // La API lo devuelve como un número (0 o 1)
+    isActive: number; 
     images: {
         banner: string;
         logo: string;
-        icon: string; // Usaremos este para el icono.
+        icon: string; 
     };
 }
