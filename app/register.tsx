@@ -47,8 +47,7 @@ export default function RegisterScreen() {
             // Opcional: Redirigir manualmente si es necesario (ej: router.replace('/'));
         } catch (e: any) {
             // El error se maneja y se almacena en el hook, lo mostramos aquí.
-            const registerError = error || 'Ha ocurrido un error inesperado durante el registro.';
-            Alert.alert('Error de Registro', registerError);
+            console.log('Error de Registro', e);
         }
     };
     

@@ -77,6 +77,7 @@ export function useAuthViewModel() {
                 ? 'El correo ya está en uso.'
                 : 'Fallo al registrar el usuario.';
             setError(message);
+            throw err;
         } finally {
             setIsOperationLoading(false);
         }
