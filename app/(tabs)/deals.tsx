@@ -109,7 +109,7 @@ export default function DealsScreen() {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" />
             <View style={styles.header}>
-                <Text style={styles.screenTitle}>🔥 Ofertas Recientes</Text>
+                <Text style={styles.screenTitle}>🎮 Ofertas Recientes</Text>
                 <TouchableOpacity onPress={signOut}>
                     <MaterialCommunityIcons name="logout" size={26} color={colors.error} />
                 </TouchableOpacity>

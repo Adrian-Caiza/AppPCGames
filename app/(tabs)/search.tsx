@@ -164,14 +164,6 @@ export default function SearchScreen() {
                     />
                 </View>
 
-                {/* Botón de búsqueda estilizado */}
-                <TouchableOpacity 
-                    style={[styles.searchButton, isButtonDisabled && styles.disabledButton]}
-                    onPress={handleSearchButton} 
-                    disabled={isButtonDisabled}
-                >
-                    <Text style={styles.searchButtonText}>Buscar</Text>
-                </TouchableOpacity>
             </View>
 
             {isTotalLoading && (
